@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/01/28 17:19:36 by user42            #+#    #+#             */
-/*   Updated: 2021/02/10 16:37:00 by user42           ###   ########.fr       */
+/*   Updated: 2021/02/15 15:45:00 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,8 +27,6 @@ static void	wait_childs(t_minishell *shell_info, t_list *cmd_lst)
 			if (cmd->pid == pid)
 			{
 				cmd->pid = -1;
-				close_pipe(cmd->fd_input);
-				close_pipe(cmd->fd_output);
 				if (cmd->ctrl_ope != '|')
 					shell_info->exit_status =
 					WEXITSTATUS(shell_info->exit_status);
@@ -52,44 +50,34 @@ static int	open_pipe(t_list *cmd_lst)
 	cmd->fd_output[1] = pipe_fd[1];
 	next_cmd->fd_input[0] = pipe_fd[0];
 	next_cmd->fd_input[1] = pipe_fd[1];
-	if (cmd->fd_input[STDIN_FILENO] != -1)
-	{
-		dup2(cmd->fd_input[STDIN_FILENO], STDIN_FILENO);
-		close(cmd->fd_input[0]);
-	}
-	if (cmd->fd_output[STDOUT_FILENO] != -1)
-	{
-		dup2(cmd->fd_output[STDOUT_FILENO], STDOUT_FILENO);
-		close(cmd->fd_output[1]);
-	}
 	return (0);
 }
 
 static int	redirect_n_exec(t_minishell *shell_info, t_list **cmd_iter,
 t_cmd *cmd, char last_cmd_ope)
 {
-	if (cmd->pid <= 0)
+	if ((shell_info->exit_status = redirection(cmd)) < 0)
 	{
-		if (cmd->pid == 0)
-			signal(SIGQUIT, SIG_DFL);
-		if ((shell_info->exit_status = redirection(cmd)) < 0)
-		{
-			shell_info->exit_status = 1;
-			if (cmd->pid == 0)
-				shell_info->exit = true;
-			else
-			{
-				reset_stdio(shell_info->stdio_save);
-				last_cmd_ope = cmd->ctrl_ope;
-				*cmd_iter = (*cmd_iter)->next;
-			}
-			return (1);
-		}
-		cmd->args_tab = t_tokens_to_chartab(cmd->args);
-		execute_cmd(shell_info, cmd->args_tab);
-		if (cmd->pid == 0)
-			return ((shell_info->exit = true));
+		shell_info->exit_status = 1;
+		reset_stdio(shell_info->stdio_save);
+		last_cmd_ope = cmd->ctrl_ope;
+		*cmd_iter = (*cmd_iter)->next;
+		return (1);
 	}
+	cmd->args_tab = t_tokens_to_chartab(cmd->args);
+	if (cmd->ctrl_ope == O_PIPE || last_cmd_ope == O_PIPE)
+		cmd->pid = fork();
+	if (cmd->pid > 0)
+		return (0);
+	if (cmd->fd_input[STDIN_FILENO] != -1)
+		dup2(cmd->fd_input[STDIN_FILENO], STDIN_FILENO);
+	if (cmd->fd_output[STDOUT_FILENO] != -1)
+		dup2(cmd->fd_output[STDOUT_FILENO], STDOUT_FILENO);
+	close_pipe(cmd->fd_input);
+	close_pipe(cmd->fd_output);
+	execute_cmd(shell_info, cmd->args_tab);
+	if (cmd->pid == 0)
+		return ((shell_info->exit = true));
 	return (0);
 }
 
@@ -108,10 +96,12 @@ static int	input_execution_loop(t_minishell *shell_info, t_list *cmd_list)
 			return (shell_info->exit_status);
 		if (cmd->ctrl_ope == O_PIPE)
 			open_pipe(cmd_iter);
-		if (cmd->ctrl_ope == O_PIPE || last_cmd_ope == O_PIPE)
-			cmd->pid = fork();
 		if (redirect_n_exec(shell_info, &cmd_iter, cmd, last_cmd_ope))
 			continue ;
+		if (cmd->fd_input[STDIN_FILENO] != -1)
+			close(cmd->fd_input[STDIN_FILENO]);
+		if (cmd->fd_output[STDOUT_FILENO] != -1)
+			close(cmd->fd_output[STDOUT_FILENO]);
 		if (cmd->ctrl_ope != O_PIPE)
 			wait_childs(shell_info, cmd_list);
 		reset_stdio(shell_info->stdio_save);

@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/01/28 16:22:05 by user42            #+#    #+#             */
-/*   Updated: 2021/02/10 16:56:47 by user42           ###   ########.fr       */
+/*   Updated: 2021/02/15 15:43:35 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,7 +51,11 @@ static int	minishell_init(t_minishell *shell_info, char **envp)
 	g_sig_int = false;
 	signal(SIGQUIT, SIG_IGN);
 	if ((g_env = ft_tabdup(envp)) == 0)
-		return (1);
+	{
+		g_env = malloc(sizeof(char*) * 2);
+		g_env[0] = ft_strdup("PATH=/bin");
+		g_env[1] = 0;
+	}
 	shell_info->is_interactive = true;
 	shell_info->exit_status = 0;
 	shell_info->exit = false;

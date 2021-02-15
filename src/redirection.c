@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/02/02 16:38:00 by user42            #+#    #+#             */
-/*   Updated: 2021/02/10 17:09:57 by user42           ###   ########.fr       */
+/*   Updated: 2021/02/15 15:45:23 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,11 +71,5 @@ int			redirection(t_cmd *cmd)
 		}
 		args = &(*args)->next;
 	}
-	if (cmd->fd_input[STDIN_FILENO] != -1)
-		dup2(cmd->fd_input[STDIN_FILENO], STDIN_FILENO);
-	if (cmd->fd_output[STDOUT_FILENO] != -1)
-		dup2(cmd->fd_output[STDOUT_FILENO], STDOUT_FILENO);
-	close_pipe(cmd->fd_input);
-	close_pipe(cmd->fd_output);
 	return (ret);
 }
