@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/12/21 15:52:35 by user42            #+#    #+#             */
-/*   Updated: 2021/02/11 14:12:00 by user42           ###   ########.fr       */
+/*   Updated: 2021/02/25 12:53:51 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,6 +78,7 @@ char			**g_env;
 bool			g_sig_int;
 
 int				minishell(int argc, char **argv, char **envp);
+char			**create_basic_env(void);
 int				prompt(t_minishell *shell_info);
 int				print_prompt(void);
 int				process_input(t_minishell *shell_info, char *input);

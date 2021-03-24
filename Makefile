@@ -8,6 +8,7 @@ SRCS	=	${patsubst %, ${C_DIR}/%, ${C_FILES}}
 
 C_FILES	=	main.c\
 			minishell.c\
+			minishell_init_utils.c\
 			signals_handler.c\
 			prompt.c\
 			process_input.c\

@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/01/28 17:19:36 by user42            #+#    #+#             */
-/*   Updated: 2021/02/15 15:45:00 by user42           ###   ########.fr       */
+/*   Updated: 2021/02/25 12:58:11 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,28 +84,27 @@ t_cmd *cmd, char last_cmd_ope)
 static int	input_execution_loop(t_minishell *shell_info, t_list *cmd_list)
 {
 	char	last_cmd_ope;
-	t_cmd	*cmd;
 	t_list	*cmd_iter;
 
 	last_cmd_ope = 0;
 	cmd_iter = cmd_list;
 	while (cmd_iter && !shell_info->exit && !g_sig_int)
 	{
-		cmd = cmd_iter->content;
-		if (shell_expansions(cmd, shell_info))
+		if (shell_expansions(((t_cmd*)cmd_iter->content), shell_info))
 			return (shell_info->exit_status);
-		if (cmd->ctrl_ope == O_PIPE)
+		if (((t_cmd*)cmd_iter->content)->ctrl_ope == O_PIPE)
 			open_pipe(cmd_iter);
-		if (redirect_n_exec(shell_info, &cmd_iter, cmd, last_cmd_ope))
+		if (redirect_n_exec(shell_info, &cmd_iter,
+		((t_cmd*)cmd_iter->content), last_cmd_ope))
 			continue ;
-		if (cmd->fd_input[STDIN_FILENO] != -1)
-			close(cmd->fd_input[STDIN_FILENO]);
-		if (cmd->fd_output[STDOUT_FILENO] != -1)
-			close(cmd->fd_output[STDOUT_FILENO]);
-		if (cmd->ctrl_ope != O_PIPE)
+		if (((t_cmd*)cmd_iter->content)->fd_input[STDIN_FILENO] != -1)
+			close(((t_cmd*)cmd_iter->content)->fd_input[STDIN_FILENO]);
+		if (((t_cmd*)cmd_iter->content)->fd_output[STDOUT_FILENO] != -1)
+			close(((t_cmd*)cmd_iter->content)->fd_output[STDOUT_FILENO]);
+		if (((t_cmd*)cmd_iter->content)->ctrl_ope != O_PIPE)
 			wait_childs(shell_info, cmd_list);
 		reset_stdio(shell_info->stdio_save);
-		last_cmd_ope = cmd->ctrl_ope;
+		last_cmd_ope = ((t_cmd*)cmd_iter->content)->ctrl_ope;
 		cmd_iter = cmd_iter->next;
 	}
 	return (0);
